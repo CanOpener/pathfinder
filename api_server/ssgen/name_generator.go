@@ -16,6 +16,12 @@ func newNameGenerator(generatorId string) (nameGenerator, string, error) {
 		return namegen.NewThreeLetters(), "three_letters", nil
 	case "three_letters":
 		return namegen.NewThreeLetters(), "three_letters", nil
+	case "cities":
+		return namegen.NewCities(), "cities", nil
+	case "countries":
+		return namegen.NewCountries(), "countries", nil
+	case "first_names":
+		return namegen.NewFirstNames(), "first_names", nil
 	default:
 		return nil, "", fmt.Errorf("unknown name_generator_id: %s", generatorId)
 	}

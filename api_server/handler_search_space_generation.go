@@ -41,6 +41,9 @@ var validNodeConnectorIds = map[string]bool{
 var validNameGeneratorIds = map[string]bool{
 	"default":       true,
 	"three_letters": true,
+	"cities":        true,
+	"countries":     true,
+	"first_names":   true,
 }
 
 func newSearchSpaceParameters(request *http.Request) (searchSpaceParameters, error) {

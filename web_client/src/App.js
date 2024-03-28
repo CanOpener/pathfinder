@@ -39,7 +39,7 @@ function App() {
       Object.values(searchSpace.search_space.nodes).forEach(node => {
         ctx.beginPath();
         ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI); // Draw a circle for each node
-        ctx.fillText(node.id, node.x + 10, node.y + 5); // Label each node
+        ctx.fillText(node.id, node.x + 10, node.y + 7); // Label each node
         ctx.stroke();
 
         // Draw lines to connected nodes
@@ -68,6 +68,9 @@ function App() {
         <select name="name_generator_id" value={parameters.name_generator} onChange={handleInputChange}>
           <option value="default">Default</option>
           <option value="three_letters">Three Letters</option>
+          <option value="cities">Cities</option>
+          <option value="countries">Countries</option>
+          <option value="first_names">First Names</option>
         </select>
         <input
           type="number"

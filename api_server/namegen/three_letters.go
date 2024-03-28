@@ -16,10 +16,10 @@ func NewThreeLetters() ThreeLetters {
 	}
 }
 
-func (a ThreeLetters) NewName() string {
-	randomIndex1 := rand.Intn(len(a.alphabet))
-	randomIndex2 := rand.Intn(len(a.alphabet))
-	randomIndex3 := rand.Intn(len(a.alphabet))
-	return fmt.Sprintf("%s%s%s", a.alphabet[randomIndex1], a.alphabet[randomIndex2],
-		a.alphabet[randomIndex3])
+func (g ThreeLetters) NewName() string {
+	randomIndex1 := rand.Intn(len(g.alphabet))
+	randomIndex2 := rand.Intn(len(g.alphabet))
+	randomIndex3 := rand.Intn(len(g.alphabet))
+	return fmt.Sprintf("%s%s%s", g.alphabet[randomIndex1], g.alphabet[randomIndex2],
+		g.alphabet[randomIndex3])
 }
