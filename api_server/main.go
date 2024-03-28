@@ -21,6 +21,7 @@ func main() {
 	// router.HandleFunc("/search_spaces/{id}", showSearchSpace).Methods("GET")
 	// router.HandleFunc("/search_spaces/{id}", deleteSearchSpace).Methods("DELETE")
 
+	log.Println("Server starting on localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
 

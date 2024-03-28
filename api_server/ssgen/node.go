@@ -1,4 +1,4 @@
-package searchSpaceGeneration
+package ssgen
 
 import (
 	"math"

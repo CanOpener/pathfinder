@@ -8,44 +8,57 @@ import (
 	"strings"
 	"time"
 
-	"github.com/canopener/pathfinder/api_server/searchSpaceGeneration"
+	"github.com/canopener/pathfinder/api_server/ssgen"
 )
 
 type searchSpaceDescriptor interface{}
 type searchSpaceParameters struct {
-	algorithm     string
-	nameGenerator string
-	nodeCount     int
+	NodeConnectorId     string `json:"node_connector_id"`
+	NameGeneratorId     string `json:"name_generator_id"`
+	NodeCount           int    `json:"node_count"`
+	MinimumNodeDistance int    `json:"minimum_node_distance"`
 }
 
-func (p searchSpaceParameters) Algorithm() string     { return p.algorithm }
-func (p searchSpaceParameters) NameGenerator() string { return p.nameGenerator }
-func (p searchSpaceParameters) NodeCount() int        { return p.nodeCount }
+func (p searchSpaceParameters) GetNodeConnectorId() string  { return p.NodeConnectorId }
+func (p searchSpaceParameters) GetNameGeneratorId() string  { return p.NameGeneratorId }
+func (p searchSpaceParameters) GetNodeCount() int           { return p.NodeCount }
+func (p searchSpaceParameters) GetMinimumNodeDistance() int { return p.MinimumNodeDistance }
 
-var validAlgorithms = map[string]bool{
-	"default": true,
-	"prim":    true,
+type GenerationParameters interface {
+	GetNodeConnectorId() string
+	GetNameGeneratorId() string
+	GetNodeCount() int
+	GetMinimumNodeDistance() int
 }
 
-var validNameGenerators = map[string]bool{
-	"default":  true,
-	"3letters": true,
+var validNodeConnectorIds = map[string]bool{
+	"default":      true,
+	"prim":         true,
+	"min_two_conn": true,
+	"none":         true,
+}
+
+var validNameGeneratorIds = map[string]bool{
+	"default":       true,
+	"three_letters": true,
 }
 
 func newSearchSpaceParameters(request *http.Request) (searchSpaceParameters, error) {
 	queryParams := request.URL.Query()
-	algorithm := queryParams.Get("algorithm")
-	_, ok := validAlgorithms[algorithm]
+	nodeConnectorId := queryParams.Get("node_connector_id")
+	_, ok := validNodeConnectorIds[nodeConnectorId]
 	if !ok {
 		return searchSpaceParameters{},
-			fmt.Errorf("invalid algorithm %s.\nvalid options are: %s", algorithm, serializeStringSet(validAlgorithms))
+			fmt.Errorf("invalid node_connector_id %s.\nvalid options are: %s",
+				nodeConnectorId, serializeStringSet(validNodeConnectorIds))
 	}
 
-	nameGenerator := request.URL.Query().Get("name_generator")
-	_, ok = validNameGenerators[nameGenerator]
+	nameGeneratorId := request.URL.Query().Get("name_generator_id")
+	_, ok = validNameGeneratorIds[nameGeneratorId]
 	if !ok {
 		return searchSpaceParameters{},
-			fmt.Errorf("invalid name_generator %s.\nvalid options are: %s", nameGenerator, serializeStringSet(validNameGenerators))
+			fmt.Errorf("invalid name_generator_id %s.\nvalid options are: %s",
+				nameGeneratorId, serializeStringSet(validNameGeneratorIds))
 	}
 
 	nodeCountString := request.URL.Query().Get("node_count")
@@ -55,16 +68,24 @@ func newSearchSpaceParameters(request *http.Request) (searchSpaceParameters, err
 			fmt.Errorf("invalid node_count %s: %w", nodeCountString, err)
 	}
 
+	minimumNodeDistanceString := request.URL.Query().Get("minimum_node_distance")
+	minimumNodeDistanceInt, err := strconv.Atoi(minimumNodeDistanceString)
+	if err != nil {
+		return searchSpaceParameters{},
+			fmt.Errorf("invalid minimum_node_distance %s: %w", minimumNodeDistanceString, err)
+	}
+
 	return searchSpaceParameters{
-		algorithm:     algorithm,
-		nameGenerator: nameGenerator,
-		nodeCount:     nodeCountInt,
+		NodeConnectorId:     nodeConnectorId,
+		NameGeneratorId:     nameGeneratorId,
+		NodeCount:           nodeCountInt,
+		MinimumNodeDistance: minimumNodeDistanceInt,
 	}, nil
 }
 
 func generateSearchSpace(params searchSpaceParameters) (searchSpaceDescriptor, int, error) {
 	startTime := time.Now()
-	searchSpace, err := searchSpaceGeneration.Generate(params)
+	searchSpace, err := ssgen.Generate(params)
 	endTime := time.Now()
 	if err != nil {
 		return nil, 0, fmt.Errorf("generation failed: %w", err)
