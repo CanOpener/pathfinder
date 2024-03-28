@@ -3,11 +3,11 @@ import axios from 'axios';
 
 function App() {
   const [parameters, setParameters] = useState({
-    node_count: '25',
-    name_generator: 'default',
-    algorithm: 'default'
+    node_connector_id: 'default',
+    name_generator_id: 'default',
+    node_count: '250',
+    minimum_node_distance: '25' 
   });
-
   const [searchSpace, setSearchSpace] = useState(null); // Define searchSpace and its setter here
 
 
@@ -41,6 +41,17 @@ function App() {
         ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI); // Draw a circle for each node
         ctx.fillText(node.id, node.x + 10, node.y + 5); // Label each node
         ctx.stroke();
+
+        // Draw lines to connected nodes
+        node.connections.forEach(connectionId => {
+            const connectedNode = searchSpace.search_space.nodes[connectionId];
+            if (connectedNode) {
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y); // Start line at current node
+                ctx.lineTo(connectedNode.x, connectedNode.y); // Draw line to connected node
+                ctx.stroke();
+            }
+        });
       });
     }
   }, [searchSpace]); // Redraw when searchSpace changes
@@ -48,19 +59,27 @@ function App() {
   return (
     <div className="App">
       <form onSubmit={handleSubmit}>
+        <select name="node_connector_id" value={parameters.algorithm} onChange={handleInputChange}>
+          <option value="default">Default</option>
+          <option value="prim">Prim</option>
+          <option value="min_two_conn">Minimum Two Connections</option>
+          <option value="none">None</option>
+        </select>
+        <select name="name_generator_id" value={parameters.name_generator} onChange={handleInputChange}>
+          <option value="default">Default</option>
+          <option value="three_letters">Three Letters</option>
+        </select>
         <input
           type="number"
           name="node_count"
           value={parameters.node_count}
           onChange={handleInputChange} />
-        <select name="name_generator" value={parameters.name_generator} onChange={handleInputChange}>
-          <option value="default">Default</option>
-          {/* Add other name_generator options here */}
-        </select>
-        <select name="algorithm" value={parameters.algorithm} onChange={handleInputChange}>
-          <option value="default">Default</option>
-          {/* Add other algorithm options here */}
-        </select>
+        <input
+          type="number"
+          name="minimum_node_distance"
+          value={parameters.minimum_node_distance}
+          onChange={handleInputChange} />
+  
         <button type="submit">Generate</button>
       </form>
       {
@@ -70,7 +89,10 @@ function App() {
             <div>
               <p>ID: {searchSpace.search_space.id}</p>
               <p>Generation Time: {searchSpace.search_space.generation_date}</p>
-              <p>Algorithm: {searchSpace.search_space.algorithm}</p>
+              <p>Generation Duration (ms): {searchSpace.generation_time_ms}</p>
+              <p>Node Connection Algorithm: {searchSpace.search_space.node_connector_id}</p>
+              <p>Name Generator: {searchSpace.search_space.name_generator_id}</p>
+              <p>Original Parameters: {JSON.stringify(searchSpace.search_space.parameters)}</p>
               {/* Display other meta information similarly */}
             </div>
           </div>
