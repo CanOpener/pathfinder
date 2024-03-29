@@ -3,8 +3,8 @@ import axios from 'axios';
 
 function App() {
   const [parameters, setParameters] = useState({
-    node_connector_id: 'default',
-    name_generator_id: 'default',
+    node_connector_id: 'prim',
+    name_generator_id: 'three_letters',
     node_count: '250',
     minimum_node_distance: '25' 
   });
@@ -22,7 +22,7 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.get(`http://127.0.0.1:8080/generate_search_space`, { params: parameters });
+      const response = await axios.get(`http://127.0.0.1:8080/generate_search_space`, { params: parameters, timeout: 50000 });
       console.log(response);
       setSearchSpace(response.data);
     } catch (error) {
@@ -59,14 +59,12 @@ function App() {
   return (
     <div className="App">
       <form onSubmit={handleSubmit}>
-        <select name="node_connector_id" value={parameters.algorithm} onChange={handleInputChange}>
-          <option value="default">Default</option>
+        <select name="node_connector_id" value={parameters.node_connector_id} onChange={handleInputChange}>
           <option value="prim">Prim</option>
           <option value="min_two_conn">Minimum Two Connections</option>
           <option value="none">None</option>
         </select>
-        <select name="name_generator_id" value={parameters.name_generator} onChange={handleInputChange}>
-          <option value="default">Default</option>
+        <select name="name_generator_id" value={parameters.name_generator_id} onChange={handleInputChange}>
           <option value="three_letters">Three Letters</option>
           <option value="cities">Cities</option>
           <option value="countries">Countries</option>
@@ -93,9 +91,9 @@ function App() {
               <p>ID: {searchSpace.search_space.id}</p>
               <p>Generation Time: {searchSpace.search_space.generation_date}</p>
               <p>Generation Duration (ms): {searchSpace.generation_time_ms}</p>
-              <p>Node Connection Algorithm: {searchSpace.search_space.node_connector_id}</p>
-              <p>Name Generator: {searchSpace.search_space.name_generator_id}</p>
-              <p>Original Parameters: {JSON.stringify(searchSpace.search_space.parameters)}</p>
+              <p>Node Connection Algorithm: {searchSpace.search_space.generation_parameters.node_connector_id}</p>
+              <p>Name Generator: {searchSpace.search_space.generation_parameters.name_generator_id}</p>
+              <p>Original Parameters: {JSON.stringify(searchSpace.search_space.generation_parameters)}</p>
               {/* Display other meta information similarly */}
             </div>
           </div>

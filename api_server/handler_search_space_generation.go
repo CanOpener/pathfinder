@@ -6,30 +6,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/canopener/pathfinder/api_server/ssgen"
 )
 
-type searchSpaceDescriptor interface{}
-type searchSpaceParameters struct {
-	NodeConnectorId     string `json:"node_connector_id"`
-	NameGeneratorId     string `json:"name_generator_id"`
-	NodeCount           int    `json:"node_count"`
-	MinimumNodeDistance int    `json:"minimum_node_distance"`
-}
-
-func (p searchSpaceParameters) GetNodeConnectorId() string  { return p.NodeConnectorId }
-func (p searchSpaceParameters) GetNameGeneratorId() string  { return p.NameGeneratorId }
-func (p searchSpaceParameters) GetNodeCount() int           { return p.NodeCount }
-func (p searchSpaceParameters) GetMinimumNodeDistance() int { return p.MinimumNodeDistance }
-
-type GenerationParameters interface {
-	GetNodeConnectorId() string
-	GetNameGeneratorId() string
-	GetNodeCount() int
-	GetMinimumNodeDistance() int
-}
+const defaultGeneratorId = "ssgen"
 
 var validNodeConnectorIds = map[string]bool{
 	"default":      true,
@@ -46,12 +25,12 @@ var validNameGeneratorIds = map[string]bool{
 	"first_names":   true,
 }
 
-func newSearchSpaceParameters(request *http.Request) (searchSpaceParameters, error) {
+func newsearchSpaceGenerationParameters(request *http.Request) (searchSpaceGenerationParameters, error) {
 	queryParams := request.URL.Query()
 	nodeConnectorId := queryParams.Get("node_connector_id")
 	_, ok := validNodeConnectorIds[nodeConnectorId]
 	if !ok {
-		return searchSpaceParameters{},
+		return searchSpaceGenerationParameters{},
 			fmt.Errorf("invalid node_connector_id %s.\nvalid options are: %s",
 				nodeConnectorId, serializeStringSet(validNodeConnectorIds))
 	}
@@ -59,7 +38,7 @@ func newSearchSpaceParameters(request *http.Request) (searchSpaceParameters, err
 	nameGeneratorId := request.URL.Query().Get("name_generator_id")
 	_, ok = validNameGeneratorIds[nameGeneratorId]
 	if !ok {
-		return searchSpaceParameters{},
+		return searchSpaceGenerationParameters{},
 			fmt.Errorf("invalid name_generator_id %s.\nvalid options are: %s",
 				nameGeneratorId, serializeStringSet(validNameGeneratorIds))
 	}
@@ -67,18 +46,18 @@ func newSearchSpaceParameters(request *http.Request) (searchSpaceParameters, err
 	nodeCountString := request.URL.Query().Get("node_count")
 	nodeCountInt, err := strconv.Atoi(nodeCountString)
 	if err != nil {
-		return searchSpaceParameters{},
+		return searchSpaceGenerationParameters{},
 			fmt.Errorf("invalid node_count %s: %w", nodeCountString, err)
 	}
 
 	minimumNodeDistanceString := request.URL.Query().Get("minimum_node_distance")
 	minimumNodeDistanceInt, err := strconv.Atoi(minimumNodeDistanceString)
 	if err != nil {
-		return searchSpaceParameters{},
+		return searchSpaceGenerationParameters{},
 			fmt.Errorf("invalid minimum_node_distance %s: %w", minimumNodeDistanceString, err)
 	}
 
-	return searchSpaceParameters{
+	return searchSpaceGenerationParameters{
 		NodeConnectorId:     nodeConnectorId,
 		NameGeneratorId:     nameGeneratorId,
 		NodeCount:           nodeCountInt,
@@ -86,25 +65,20 @@ func newSearchSpaceParameters(request *http.Request) (searchSpaceParameters, err
 	}, nil
 }
 
-func generateSearchSpace(params searchSpaceParameters) (searchSpaceDescriptor, int, error) {
-	startTime := time.Now()
-	searchSpace, err := ssgen.Generate(params)
-	endTime := time.Now()
-	if err != nil {
-		return nil, 0, fmt.Errorf("generation failed: %w", err)
-	}
-
-	return searchSpace, int(endTime.Sub(startTime).Milliseconds()), nil
-}
-
 func handleGenerateSearchSpace(writer http.ResponseWriter, request *http.Request) {
-	params, err := newSearchSpaceParameters(request)
+	params, err := newsearchSpaceGenerationParameters(request)
 	if err != nil {
 		sendErrorResponse(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	searchSpace, durationMs, err := generateSearchSpace(params)
+	generator, err := newSearchSpaceGenerator(defaultGeneratorId, params)
+	if err != nil {
+		sendErrorResponse(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	searchSpace, durationMs, err := generator.Generate()
 	if err != nil {
 		sendErrorResponse(writer, err.Error(), http.StatusInternalServerError)
 		return

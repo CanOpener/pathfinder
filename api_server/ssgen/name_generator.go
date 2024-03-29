@@ -10,19 +10,17 @@ type nameGenerator interface {
 	NewName() string
 }
 
-func newNameGenerator(generatorId string) (nameGenerator, string, error) {
+func newNameGenerator(generatorId string) (nameGenerator, error) {
 	switch generatorId {
-	case "default":
-		return namegen.NewThreeLetters(), "three_letters", nil
 	case "three_letters":
-		return namegen.NewThreeLetters(), "three_letters", nil
+		return namegen.NewThreeLetters(), nil
 	case "cities":
-		return namegen.NewCities(), "cities", nil
+		return namegen.NewCities(), nil
 	case "countries":
-		return namegen.NewCountries(), "countries", nil
+		return namegen.NewCountries(), nil
 	case "first_names":
-		return namegen.NewFirstNames(), "first_names", nil
+		return namegen.NewFirstNames(), nil
 	default:
-		return nil, "", fmt.Errorf("unknown name_generator_id: %s", generatorId)
+		return nil, fmt.Errorf("unknown name_generator_id: %s", generatorId)
 	}
 }
