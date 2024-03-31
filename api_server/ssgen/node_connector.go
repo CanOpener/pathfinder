@@ -1,20 +1,81 @@
 package ssgen
 
-import "fmt"
+import (
+	"fmt"
 
-type nodeConnector interface {
-	ConnectedNodes(map[string]Node) (map[string]Node, error)
+	"github.com/canopener/pathfinder/api_server/nodeconnect"
+)
+
+type nodeConnector struct {
+	parameters GenerationParameters
 }
 
-func newNodeConnector(algorithmId string) (nodeConnector, error) {
-	switch algorithmId {
+type rawNodeConnector interface {
+	ConnectNodes() (map[string]map[string]float64, error)
+}
+
+type fullNodeConnectorParameters struct {
+	parameters GenerationParameters
+	nodes      []nodeconnect.NodeDescriptor
+}
+
+func (p fullNodeConnectorParameters) GetMaximumNodeConnectionCount() int {
+	return p.parameters.GetMaximumNodeConnectionCount()
+}
+func (p fullNodeConnectorParameters) GetNodes() []nodeconnect.NodeDescriptor {
+	return p.nodes
+}
+
+func newNodeConnector(parameters GenerationParameters) (nodeConnector, error) {
+	return nodeConnector{parameters: parameters}, nil
+}
+
+func (c nodeConnector) connectNodes(nodes map[string]Node) (map[string]Node, error) {
+	rawNodeConnector, err := c.initRawNodeConnector(nodes)
+	if err != nil {
+		return nil, err
+	}
+
+	nodeConnections, err := rawNodeConnector.ConnectNodes()
+	if err != nil {
+		return nil, err
+	}
+
+	newNodes := map[string]Node{}
+	for targetNodeId, targetNode := range nodes {
+		newNode := Node{
+			X:           targetNode.X,
+			Y:           targetNode.Y,
+			Connections: nodeConnections[targetNodeId],
+		}
+		newNodes[targetNodeId] = newNode
+	}
+
+	return newNodes, nil
+}
+
+func (c nodeConnector) initRawNodeConnector(nodes map[string]Node) (rawNodeConnector, error) {
+	nodeDescriptors := []nodeconnect.NodeDescriptor{}
+	for id, node := range nodes {
+		nodeDescriptors = append(nodeDescriptors, nodeconnect.NodeDescriptor{
+			X:  node.X,
+			Y:  node.Y,
+			Id: id,
+		})
+	}
+	fullParameters := fullNodeConnectorParameters{
+		parameters: c.parameters,
+		nodes:      nodeDescriptors,
+	}
+
+	switch c.parameters.GetNodeConnectorId() {
 	case "prim":
-		return newNodeConnectorPrim(), nil
-	case "min_two_conn":
-		return newNodeConnectorMinTwo(), nil
+		return nodeconnect.NewPrim(fullParameters), nil
+	case "maxn":
+		return nodeconnect.NewMaxN(fullParameters), nil
 	case "none":
-		return newNodeConnectorNone(), nil
+		return nodeconnect.NewNone(fullParameters), nil
 	default:
-		return nil, fmt.Errorf("unknown algorithm: %s", algorithmId)
+		return nil, fmt.Errorf("unknown node connector: %s", c.parameters.GetNodeConnectorId())
 	}
 }

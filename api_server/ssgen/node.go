@@ -2,23 +2,12 @@ package ssgen
 
 import (
 	"math"
-	"math/rand"
 )
 
 type Node struct {
-	Id          string   `json:"id"`
-	X           int      `json:"x"`
-	Y           int      `json:"y"`
-	Connections []string `json:"connections"`
-}
-
-func newNode(id string) Node {
-	return Node{
-		Id:          id,
-		X:           rand.Intn(1000),
-		Y:           rand.Intn(1000),
-		Connections: []string{},
-	}
+	X           int                `json:"x"`
+	Y           int                `json:"y"`
+	Connections map[string]float64 `json:"connections"`
 }
 
 func (n Node) distanceTo(otherNode Node) float64 {

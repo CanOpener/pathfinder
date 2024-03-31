@@ -3,32 +3,30 @@ package namegen
 import (
 	"fmt"
 
-	"github.com/jaswdr/faker"
+	"github.com/google/uuid"
 )
 
-type Cities struct {
+type Uuid struct {
 	parameters NameGeneratorParameters
 	takenNames map[string]int
-	faker      faker.Faker
 }
 
-func NewCities(parameters NameGeneratorParameters) *Cities {
-	return &Cities{
+func NewUuid(parameters NameGeneratorParameters) *Uuid {
+	return &Uuid{
 		parameters: parameters,
 		takenNames: map[string]int{},
-		faker:      faker.New(),
 	}
 }
 
-func (g *Cities) NewName() (string, error) {
+func (g *Uuid) NewName() (string, error) {
 	if g.parameters.GetAllowDuplicates() {
 		return g.newNameWithDuplicates(), nil
 	}
 	return g.newNameWithoutDuplicates()
 }
 
-func (g *Cities) newNameWithDuplicates() string {
-	originalNewName := g.faker.Address().City()
+func (g *Uuid) newNameWithDuplicates() string {
+	originalNewName := uuid.New().String()
 	finalNewName := originalNewName
 	count := g.takenNames[originalNewName]
 	if count > 0 {
@@ -38,10 +36,10 @@ func (g *Cities) newNameWithDuplicates() string {
 	return finalNewName
 }
 
-func (g *Cities) newNameWithoutDuplicates() (string, error) {
+func (g *Uuid) newNameWithoutDuplicates() (string, error) {
 	attemptCount := 0
 	for attemptCount < g.parameters.GetMaximumSampleAttempts() {
-		potentialName := g.faker.Address().City()
+		potentialName := uuid.New().String()
 		if _, ok := g.takenNames[potentialName]; ok {
 			attemptCount += 1
 			continue

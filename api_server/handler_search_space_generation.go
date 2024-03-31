@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const defaultGeneratorId = "ssgen"
+// const defaultGeneratorId = "ssgen"
 
 var validNodeConnectorIds = map[string]bool{
 	"default":      true,
@@ -25,12 +25,12 @@ var validNameGeneratorIds = map[string]bool{
 	"first_names":   true,
 }
 
-func newsearchSpaceGenerationParameters(request *http.Request) (searchSpaceGenerationParameters, error) {
+func newsearchSpaceGenerationParameters(request *http.Request) (SearchSpaceGenerationParameters, error) {
 	queryParams := request.URL.Query()
 	nodeConnectorId := queryParams.Get("node_connector_id")
 	_, ok := validNodeConnectorIds[nodeConnectorId]
 	if !ok {
-		return searchSpaceGenerationParameters{},
+		return SearchSpaceGenerationParameters{},
 			fmt.Errorf("invalid node_connector_id %s.\nvalid options are: %s",
 				nodeConnectorId, serializeStringSet(validNodeConnectorIds))
 	}
@@ -38,7 +38,7 @@ func newsearchSpaceGenerationParameters(request *http.Request) (searchSpaceGener
 	nameGeneratorId := request.URL.Query().Get("name_generator_id")
 	_, ok = validNameGeneratorIds[nameGeneratorId]
 	if !ok {
-		return searchSpaceGenerationParameters{},
+		return SearchSpaceGenerationParameters{},
 			fmt.Errorf("invalid name_generator_id %s.\nvalid options are: %s",
 				nameGeneratorId, serializeStringSet(validNameGeneratorIds))
 	}
@@ -46,18 +46,18 @@ func newsearchSpaceGenerationParameters(request *http.Request) (searchSpaceGener
 	nodeCountString := request.URL.Query().Get("node_count")
 	nodeCountInt, err := strconv.Atoi(nodeCountString)
 	if err != nil {
-		return searchSpaceGenerationParameters{},
+		return SearchSpaceGenerationParameters{},
 			fmt.Errorf("invalid node_count %s: %w", nodeCountString, err)
 	}
 
 	minimumNodeDistanceString := request.URL.Query().Get("minimum_node_distance")
 	minimumNodeDistanceInt, err := strconv.Atoi(minimumNodeDistanceString)
 	if err != nil {
-		return searchSpaceGenerationParameters{},
+		return SearchSpaceGenerationParameters{},
 			fmt.Errorf("invalid minimum_node_distance %s: %w", minimumNodeDistanceString, err)
 	}
 
-	return searchSpaceGenerationParameters{
+	return SearchSpaceGenerationParameters{
 		NodeConnectorId:     nodeConnectorId,
 		NameGeneratorId:     nameGeneratorId,
 		NodeCount:           nodeCountInt,
@@ -72,13 +72,13 @@ func handleGenerateSearchSpace(writer http.ResponseWriter, request *http.Request
 		return
 	}
 
-	generator, err := newSearchSpaceGenerator(defaultGeneratorId, params)
+	generator, err := newSearchSpaceGenerator(defaultGeneratorId)
 	if err != nil {
 		sendErrorResponse(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	searchSpace, durationMs, err := generator.Generate()
+	searchSpace, durationMs, err := generator.Generate(params)
 	if err != nil {
 		sendErrorResponse(writer, err.Error(), http.StatusInternalServerError)
 		return

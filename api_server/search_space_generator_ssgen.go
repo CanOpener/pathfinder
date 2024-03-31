@@ -10,18 +10,19 @@ type ssgenGenerator struct {
 	generator ssgen.Generator
 }
 
-func newSsgenGenerator(parameters searchSpaceGenerationParameters) (*ssgenGenerator, error) {
-	generator, err := ssgen.NewGenerator(parameters)
-	if err != nil {
-		return nil, nil
-	}
-
+func newSsgenGenerator() (*ssgenGenerator, error) {
 	return &ssgenGenerator{
-		generator: generator,
+		generator: ssgen.Generator{},
 	}, nil
 }
 
-func (g *ssgenGenerator) Generate() (searchSpaceDescriptor, int, error) {
+func (g *ssgenGenerator) Generate(parameters SearchSpaceGenerationParameters) (searchSpaceDescriptor, int, error) {
+	generator, err := ssgen.NewGenerator(parameters)
+	if err != nil {
+		return nil, 0, err
+	}
+	g.generator = generator
+
 	startTime := time.Now()
 	searchSpace, err := g.generator.Generate()
 	endTime := time.Now()
