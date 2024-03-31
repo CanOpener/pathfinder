@@ -8,32 +8,61 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const defaultSearchSpaceGeneratorId = "ssgen"
+const defaultGeneratorJobManagerId = "mutex"
+const defaultPersistenceManagerId = "json_files"
+
+var mainSearchSpaceGenerator searchSpaceGenerator
+var mainGenerationJobManager generationJobManager
+var mainPersistenceManager persistenceManager
+
 func main() {
+	initializeSingletons()
 	router := mux.NewRouter()
 
-	// Apply the CORS middleware to every request
 	router.Use(corsMiddleware)
 
-	router.HandleFunc("/generate_search_space", handleGenerateSearchSpace).Methods("GET")
+	router.HandleFunc("/generation_jobs", createGenerationJob).Methods("POST")
+	router.HandleFunc("/generation_jobs/{id}", showGenerationJob).Methods("GET")
 
-	// router.HandleFunc("/search_spaces", indexSearchSpaces).Methods("GET")
-	// router.HandleFunc("/search_spaces", createSearchSpace).Methods("POST")
-	// router.HandleFunc("/search_spaces/{id}", showSearchSpace).Methods("GET")
-	// router.HandleFunc("/search_spaces/{id}", deleteSearchSpace).Methods("DELETE")
+	router.HandleFunc("/search_spaces", indexSearchSpaces).Methods("GET")
+	router.HandleFunc("/search_spaces", createSearchSpace).Methods("POST")
+	router.HandleFunc("/search_spaces/{id}", showSearchSpace).Methods("GET")
+	router.HandleFunc("/search_spaces/{id}", deleteSearchSpace).Methods("DELETE")
 
 	log.Println("Server starting on localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
-// corsMiddleware adds CORS headers to the response
+func initializeSingletons() {
+	generator, err := newSearchSpaceGenerator(defaultSearchSpaceGeneratorId)
+	if err != nil {
+		log.Fatalf("failed to initialize main search space generator with id '%s' error: %v",
+			defaultSearchSpaceGeneratorId, err)
+	}
+	mainSearchSpaceGenerator = generator
+
+	jobManager, err := newGenerationJobManager(defaultGeneratorJobManagerId, mainSearchSpaceGenerator)
+	if err != nil {
+		log.Fatalf("failed to initialize main generation job manager with id '%s' error: %v",
+			defaultGeneratorJobManagerId, err)
+	}
+	mainGenerationJobManager = jobManager
+
+	persistenceManager, err := newPersistenceManager(defaultPersistenceManagerId)
+	if err != nil {
+		log.Fatalf("failed to initialize main persistence manager with id '%s' error: %v",
+			defaultPersistenceManagerId, err)
+	}
+	mainPersistenceManager = persistenceManager
+}
+
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Allow specific origin or use "*" to allow all
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
-		// Check if the request is for CORS preflight
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
@@ -65,4 +94,16 @@ func errorResponse(message string) ([]byte, error) {
 	}
 
 	return json.Marshal(errorResponse)
+}
+
+func sendSuccessJsonResponse(writer http.ResponseWriter, content interface{}) {
+	response, err := json.Marshal(content)
+	if err != nil {
+		sendErrorResponse(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+	writer.Write(response)
 }
