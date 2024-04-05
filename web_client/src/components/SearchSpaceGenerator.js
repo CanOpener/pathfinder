@@ -114,6 +114,7 @@ const SearchSpaceGenerator = ({ searchSpace, setSearchSpace }) => {
           <option value="cities">Cities</option>
           <option value="first_names">First Names</option>
           <option value="three_letters">Three Letters</option>
+          <option value="uuid">UUID</option>
         </select>
         <input type="checkbox" name="allow_duplicates" checked={generationParameters.allow_duplicates} onChange={handleParameterChange} />
         <input type="number" name="maximum_sample_attempts" value={generationParameters.maximum_sample_attempts} onChange={handleParameterChange} />
