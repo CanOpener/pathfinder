@@ -56,7 +56,7 @@ func (g nameGenerator) nameNodes(nodes map[string]Node) (map[string]Node, error)
 
 func (g nameGenerator) mapNewNames(nodes map[string]Node) (map[string]string, error) {
 	oldToNewNameMap := map[string]string{}
-	for id, _ := range nodes {
+	for id := range nodes {
 		newName, err := g.generator.NewName()
 		if err != nil {
 			return nil, err

@@ -69,7 +69,7 @@ func (c *Prim) shortestPossibleConnection() (connection, error) {
 	shortestPossibleConnection := connection{}
 	oneConnectionFound := false
 
-	for visitedNodeId, _ := range c.visitedNodes {
+	for visitedNodeId := range c.visitedNodes {
 		shortestNodeConnection, ok := c.shortestPossibleConnectionForNode(visitedNodeId)
 		if !ok {
 			continue

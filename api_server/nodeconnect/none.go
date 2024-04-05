@@ -8,7 +8,7 @@ type None struct {
 type NoneParameters interface{}
 
 func NewNone(parameters NoneParameters) *None {
-	return &None{}
+	return &None{parameters: parameters}
 }
 
 func (c *None) ConnectNodes() (map[string]map[string]float64, error) {
