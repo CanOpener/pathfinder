@@ -7,12 +7,13 @@ import (
 )
 
 type CreateSearchSpaceParameters struct {
-	Id                   string                           `json:"id"`
-	Name                 string                           `json:"name"`
-	GenerationDate       time.Time                        `json:"generation_date"`
-	GenerationDurationMs int                              `json:"generation_duration_ms"`
-	GenerationParameters GenerationJobParameters          `json:"generation_job_parameters"`
-	Nodes                map[string]CreateSearchSpaceNode `json:"nodes"`
+	Name                    string                           `json:"name"`
+	GenerationDate          time.Time                        `json:"generation_date"`
+	GenerationDurationMs    int                              `json:"generation_duration_ms"`
+	GenerationJobParameters GenerationJobParameters          `json:"generation_job_parameters"`
+	GridSizeX               int                              `json:"grid_size_x"`
+	GridSizeY               int                              `json:"grid_size_y"`
+	Nodes                   map[string]CreateSearchSpaceNode `json:"nodes"`
 }
 
 type CreateSearchSpaceNode struct {

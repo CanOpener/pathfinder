@@ -13,7 +13,7 @@ type rawNameGenerator interface {
 	NewName() (string, error)
 }
 
-func newNameGenerator(parameters GenerationParameters) (nameGenerator, error) {
+func newNameGenerator(parameters GenerationJobParameters) (nameGenerator, error) {
 	switch parameters.GetNameGeneratorId() {
 	case "three_letters":
 		return nameGenerator{generator: namegen.NewThreeLetters(parameters)}, nil

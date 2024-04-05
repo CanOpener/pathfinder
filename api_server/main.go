@@ -5,12 +5,13 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 const defaultSearchSpaceGeneratorId = "ssgen"
 const defaultGeneratorJobManagerId = "mutex"
-const defaultPersistenceManagerId = "json_files"
+const defaultPersistenceManagerId = "memory"
 
 var mainSearchSpaceGenerator searchSpaceGenerator
 var mainGenerationJobManager generationJobManager
@@ -20,7 +21,11 @@ func main() {
 	initializeSingletons()
 	router := mux.NewRouter()
 
-	router.Use(corsMiddleware)
+	router.Use(loggerMiddleware)
+
+	headersOk := handlers.AllowedHeaders([]string{"Accept", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"})
+	originsOk := handlers.AllowedOrigins([]string{"http://localhost:3000"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	router.HandleFunc("/generation_jobs", createGenerationJob).Methods("POST")
 	router.HandleFunc("/generation_jobs/{id}", showGenerationJob).Methods("GET")
@@ -31,7 +36,7 @@ func main() {
 	router.HandleFunc("/search_spaces/{id}", deleteSearchSpace).Methods("DELETE")
 
 	log.Println("Server starting on localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(originsOk, headersOk, methodsOk)(router)))
 }
 
 func initializeSingletons() {
@@ -57,17 +62,9 @@ func initializeSingletons() {
 	mainPersistenceManager = persistenceManager
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
+func loggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
+		log.Printf("%s %s\n", r.Method, r.RequestURI)
 		next.ServeHTTP(w, r)
 	})
 }

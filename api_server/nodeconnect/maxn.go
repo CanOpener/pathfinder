@@ -30,7 +30,7 @@ func (c *MaxN) ConnectNodes() (map[string]map[string]float64, error) {
 				continue
 			}
 
-			if _, ok := originalNode.connections[connectingNodeId]; !ok {
+			if _, ok := originalNode.connections[connectingNodeId]; ok {
 				continue
 			}
 

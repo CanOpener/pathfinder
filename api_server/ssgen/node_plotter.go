@@ -14,7 +14,7 @@ type rawNodePlotter interface {
 	PlotNodes() ([]nodeplot.Coordinate, error)
 }
 
-func newNodePlotter(parameters GenerationParameters) (nodePlotter, error) {
+func newNodePlotter(parameters GenerationJobParameters) (nodePlotter, error) {
 	switch parameters.GetNodePlotterId() {
 	case "random":
 		return nodePlotter{generator: nodeplot.NewRandom(parameters)}, nil

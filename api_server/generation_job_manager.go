@@ -20,7 +20,7 @@ type GenerationJobStatus struct {
 	StartTime  time.Time               `json:"startTime"`
 	EndTime    time.Time               `json:"endTime"`
 	Result     searchSpaceDescriptor   `json:"result"`
-	Err        error                   `json:"err"`
+	Error      string                  `json:"error"`
 }
 
 func newGenerationJobManager(managerId string, generator searchSpaceGenerator) (generationJobManager, error) {
@@ -72,7 +72,7 @@ func (m *mutexGenerationJobManager) initializeJob(parameters GenerationJobParame
 		StartTime:  time.Now(),
 		EndTime:    time.Now(),
 		Result:     nil,
-		Err:        nil,
+		Error:      "",
 	}
 
 	return jobId
@@ -119,7 +119,8 @@ func (m *mutexGenerationJobManager) updateJobStatusError(id string, err error) {
 
 	status.Status = "error"
 	status.EndTime = time.Now()
-	status.Err = err
+	status.Error = err.Error()
+
 	m.jobStatuses[id] = status
 }
 

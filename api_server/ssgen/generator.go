@@ -2,17 +2,18 @@ package ssgen
 
 import (
 	"fmt"
+	"time"
 )
 
 type Generator struct {
-	parameters    GenerationParameters
+	parameters    GenerationJobParameters
 	nodePlotter   nodePlotter
 	nodeConnector nodeConnector
 	nameGenerator nameGenerator
 	searchSpace   SearchSpace
 }
 
-type GenerationParameters interface {
+type GenerationJobParameters interface {
 	GetNodePlotterId() string
 	GetNodeCount() int
 	GetMinimumDistance() int
@@ -26,7 +27,7 @@ type GenerationParameters interface {
 	GetMaximumSampleAttempts() int
 }
 
-func NewGenerator(parameters GenerationParameters) (Generator, error) {
+func NewGenerator(parameters GenerationJobParameters) (Generator, error) {
 	nodePlotter, err := newNodePlotter(parameters)
 	if err != nil {
 		return Generator{}, fmt.Errorf("failed to inint nodePlotter: %w", err)
@@ -52,6 +53,7 @@ func NewGenerator(parameters GenerationParameters) (Generator, error) {
 }
 
 func (g *Generator) Generate() (SearchSpace, error) {
+	startTime := time.Now()
 	err := g.plotNodes()
 	if err != nil {
 		return SearchSpace{}, fmt.Errorf("ssgen failed to plot nodes :%w", err)
@@ -62,11 +64,12 @@ func (g *Generator) Generate() (SearchSpace, error) {
 		return SearchSpace{}, fmt.Errorf("ssgen failed to connect nodes :%w", err)
 	}
 
-	err = g.connectNodes()
+	err = g.nameNodes()
 	if err != nil {
 		return SearchSpace{}, fmt.Errorf("ssgen failed to name nodes :%w", err)
 	}
 
+	g.searchSpace.GenerationDurationMs = int(time.Since(startTime).Milliseconds())
 	return g.searchSpace, nil
 }
 

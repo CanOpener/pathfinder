@@ -7,7 +7,7 @@ import (
 )
 
 type nodeConnector struct {
-	parameters GenerationParameters
+	parameters GenerationJobParameters
 }
 
 type rawNodeConnector interface {
@@ -15,7 +15,7 @@ type rawNodeConnector interface {
 }
 
 type fullNodeConnectorParameters struct {
-	parameters GenerationParameters
+	parameters GenerationJobParameters
 	nodes      []nodeconnect.NodeDescriptor
 }
 
@@ -26,7 +26,7 @@ func (p fullNodeConnectorParameters) GetNodes() []nodeconnect.NodeDescriptor {
 	return p.nodes
 }
 
-func newNodeConnector(parameters GenerationParameters) (nodeConnector, error) {
+func newNodeConnector(parameters GenerationJobParameters) (nodeConnector, error) {
 	return nodeConnector{parameters: parameters}, nil
 }
 
