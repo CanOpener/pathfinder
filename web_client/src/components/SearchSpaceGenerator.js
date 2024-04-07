@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 
-const SearchSpaceGenerator = ({ searchSpace, setSearchSpace, pollingInfo, setPollingInfo, generationParameters, setGenerationParameters, dimensions }) => {
+const SearchSpaceGenerator = ({ searchSpace, setSearchSpace, pollingInfo, setPollingInfo, generationParameters, setGenerationParameters, dimensions, setSearchSpaces, setMode }) => {
   const handleParameterChange = (e) => {
     const { name, value, type, checked } = e.target;
     var newValue = value
@@ -82,11 +82,65 @@ const SearchSpaceGenerator = ({ searchSpace, setSearchSpace, pollingInfo, setPol
     }
   };
 
+  const handleLoadClick = async(e) => {
+    try {
+      const response = await axios.get('http://127.0.0.1:8080/search_spaces');
+      setSearchSpaces(response.data.search_spaces);
+      setMode("load")
+    } catch (error) {
+      console.error("Failed to fetch search spaces:", error);
+    }
+  };
+
+  const handleSaveClick = async(e) => {
+    try {
+      const saveResponse = await axios.post(`http://127.0.0.1:8080/search_spaces`, searchSpace, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 5000
+      });
+      if (!saveResponse.data.success) {
+        alert(`Error saving search state: ${saveResponse.data.error}`);
+        return
+      }
+      var newSearchSpace = JSON.parse(JSON.stringify(searchSpace))
+      newSearchSpace.name = ""
+      newSearchSpace.nodes = {}
+      setSearchSpace(newSearchSpace)
+    } catch (error) {
+      console.error("Failed to fetch search spaces:", error);
+    }
+  };
+
+  const handleNameChange = (e) => {
+    const { value, } = e.target;
+    var newSearchSpace = JSON.parse(JSON.stringify(searchSpace))
+    newSearchSpace.name = value
+    setSearchSpace(newSearchSpace)
+  }
+
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        {/* Node plotter parameters */}
         <hr />
+        <div className="button-row">
+          <button type="submit">Generate</button>
+          <button type="button"onClick={handleSaveClick}>Save</button>
+          <button type="button" onClick={handleLoadClick}>Load</button>
+        </div>
+
+        <hr />
+        {/* Saving parameters */}
+        <label><b>Saving Parameters</b></label>
+        <div>
+          <label htmlFor="name">Name </label>
+          <input type="text" name="name" value={searchSpace.name} onChange={handleNameChange} />
+        </div>
+        <hr />
+
+        {/* Node plotter parameters */}
+        <label><b>Node Plotter Parameters</b></label>
 
         <div>
           <label htmlFor="node_plotter_id">Node Plotter ID </label>
@@ -95,35 +149,25 @@ const SearchSpaceGenerator = ({ searchSpace, setSearchSpace, pollingInfo, setPol
           </select>
         </div>
 
-        <hr />
-
         <div>
           <label htmlFor="node_count">Node Count </label>
           <input type="number" name="node_count" value={generationParameters.node_count} onChange={handleParameterChange} />
         </div>
-
-        <hr />
 
         <div>
           <label htmlFor="minimum_distance">Minimum Distance </label>
           <input type="number" name="minimum_distance" value={generationParameters.minimum_distance} onChange={handleParameterChange} />
         </div>
 
-        <hr />
-
         <div>
           <label htmlFor="maximum_plot_attempts">Maximum Plot Attempts </label>
           <input type="number" name="maximum_plot_attempts" value={generationParameters.maximum_plot_attempts} onChange={handleParameterChange} />
         </div>
 
-        <hr />
-
         <div>
           <label htmlFor="grid_size_x">Grid Size X </label>
           <input type="number" name="grid_size_x" value={dimensions?.width || 0} readOnly />
         </div>
-
-        <hr />
 
         <div>
           <label htmlFor="grid_size_y">Grid Size Y </label>
@@ -133,6 +177,8 @@ const SearchSpaceGenerator = ({ searchSpace, setSearchSpace, pollingInfo, setPol
         <hr />
 
         {/* Node connector parameters */}
+        <label><b>Node connector parameters</b></label>
+
         <div>
           <label htmlFor="node_connector_id">Node Connector ID </label>
           <select name="node_connector_id" value={generationParameters.node_connector_id} onChange={handleParameterChange}>
@@ -142,8 +188,6 @@ const SearchSpaceGenerator = ({ searchSpace, setSearchSpace, pollingInfo, setPol
           </select>
         </div>
 
-        <hr />
-
         <div>
           <label htmlFor="maximum_node_connection_count">Maximum Node Connection Count </label>
           <input type="number" name="maximum_node_connection_count" value={generationParameters.maximum_node_connection_count} onChange={handleParameterChange} />
@@ -152,6 +196,8 @@ const SearchSpaceGenerator = ({ searchSpace, setSearchSpace, pollingInfo, setPol
         <hr />
 
         {/* Name generator parameters */}
+        <label><b>Name generator parameters</b></label>
+
         <div>
           <label htmlFor="name_generator_id">Name Generator ID </label>
           <select name="name_generator_id" value={generationParameters.name_generator_id} onChange={handleParameterChange}>
@@ -163,8 +209,6 @@ const SearchSpaceGenerator = ({ searchSpace, setSearchSpace, pollingInfo, setPol
           </select>
         </div>
 
-        <hr />
-
         <div>
           <label>
             <input type="checkbox" name="allow_duplicates" checked={generationParameters.allow_duplicates} onChange={handleParameterChange} />
@@ -172,16 +216,12 @@ const SearchSpaceGenerator = ({ searchSpace, setSearchSpace, pollingInfo, setPol
           </label>
         </div>
 
-        <hr />
-
         <div>
           <label htmlFor="maximum_sample_attempts">Maximum Sample Attempts </label>
           <input type="number" name="maximum_sample_attempts" value={generationParameters.maximum_sample_attempts} onChange={handleParameterChange} />
         </div>
 
         <hr />
-
-        <button type="submit">Generate</button>
       </form>
     </div>
   );

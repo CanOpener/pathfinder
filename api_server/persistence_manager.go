@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -15,8 +16,12 @@ type persistenceManager interface {
 }
 
 type SearchSpaceIdentifier struct {
-	Name string `json:"name"`
-	Id   string `json:"id"`
+	Name           string    `json:"name"`
+	Id             string    `json:"id"`
+	GenerationDate time.Time `json:"generation_date"`
+	NodeCount      int       `json:"node_count"`
+	GridSizeX      int       `json:"grid_size_x"`
+	GridSizeY      int       `json:"grid_size_y"`
 }
 
 func newPersistenceManager(managerId string) (persistenceManager, error) {
@@ -57,8 +62,12 @@ func (m *memoryPersistenceManager) ListSearchSpaces() ([]SearchSpaceIdentifier, 
 	identifiers := []SearchSpaceIdentifier{}
 	for id, searchSpace := range m.searchSpaces {
 		identifiers = append(identifiers, SearchSpaceIdentifier{
-			Id:   id,
-			Name: searchSpace.Name,
+			Id:             id,
+			Name:           searchSpace.Name,
+			GenerationDate: searchSpace.GenerationDate,
+			NodeCount:      len(searchSpace.Nodes),
+			GridSizeX:      searchSpace.GridSizeX,
+			GridSizeY:      searchSpace.GridSizeY,
 		})
 	}
 	return identifiers, nil

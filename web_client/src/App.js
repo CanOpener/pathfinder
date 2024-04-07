@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import SearchSpaceDisplay from './components/SearchSpaceDisplay'
 import SearchSpaceGenerator from './components/SearchSpaceGenerator'
 import SearchSpaceInfo from './components/SearchSpaceInfo'
+import SearchSpaceLoader from './components/SearchSpaceLoader'
 import SearchSpaceSearcher from './components/SearchSpaceSearcher'
 import './App.css';
 
@@ -39,6 +40,8 @@ function App() {
 
   const [dimensions, setDimensions] = useState(null);
 
+  const [searchSpaces, setSearchSpaces] = useState([]);
+
   useEffect(() => {
     if (searchSpaceDisplayRef.current) {
       let width = searchSpaceDisplayRef.current.offsetWidth - 10
@@ -73,9 +76,16 @@ function App() {
                                            setPollingInfo={setPollingInfo}
                                            generationParameters={generationParameters}
                                            setGenerationParameters={setGenerationParameters}
-                                           dimensions={dimensions} />;
+                                           dimensions={dimensions}
+                                           setSearchSpaces={setSearchSpaces}
+                                           setMode={setMode} />;
             } else if (mode === "search") {
-              return <SearchSpaceSearcher />;
+              return <SearchSpaceSearcher searchSpace={searchSpace}
+                                          setSearchSpace={setSearchSpace}
+                                          setSearchSpaces={setSearchSpaces}
+                                          setMode={setMode}/>;
+            } else if (mode === "load") {
+              return <SearchSpaceLoader searchSpaces={searchSpaces} setSearchSpace={setSearchSpace} setMode={setMode}/>;
             } else {
               return <div></div>;
             }

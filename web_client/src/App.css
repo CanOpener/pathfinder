@@ -31,6 +31,16 @@
   pointer-events: none;
 }
 
+.button-row button {
+  display: inline-block; /* or 'inline', depending on your preference */
+  margin-right: 10px; /* Optional: adds some space between the buttons */
+}
+
+.vertical-labels label {
+  display: block;
+}
+
+
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
