@@ -1,5 +1,29 @@
 .App {
   text-align: center;
+  display: grid;
+  height: 100vh; /* Use the full height of the viewport */
+  grid-template-columns: 75% 25%; /* 75% for the left side, 25% for the right side */
+  grid-template-rows: auto; /* Let the rows adjust to the content size */
+}
+
+.left-section {
+  display: grid;
+  grid-template-rows: 75% 25%; /* 75% for the top, 25% for the bottom */
+  border: 1px solid #ccc;
+}
+
+.right-section {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ccc;
+}
+
+.search-space-display {
+  border-bottom: 1px solid #ccc; /* Adds a solid border to the bottom */
+}
+
+.search-space-info {
+  border-top: 1px solid #ccc; /* Adds a solid border to the top */
 }
 
 .App-logo {
